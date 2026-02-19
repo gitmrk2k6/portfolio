@@ -10,6 +10,37 @@ const Portfolio = () => {
   const isScrollingRef = useRef(false);
   const scrollTimerRef = useRef(null);
 
+  // Handle browser back/forward for detail pages
+  useEffect(() => {
+    const handlePopState = (e) => {
+      if (e.state && e.state.detailPage) {
+        setDetailPage(e.state.detailPage);
+      } else {
+        setDetailPage(null);
+        // Scroll to works section after returning
+        setTimeout(() => {
+          const el = sectionRefs.current.works;
+          if (el) {
+            const top = el.getBoundingClientRect().top + window.pageYOffset - NAV_HEIGHT;
+            window.scrollTo({ top, behavior: "auto" });
+          }
+        }, 50);
+      }
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
+  const openDetailPage = (workId) => {
+    window.history.pushState({ detailPage: workId }, "");
+    setDetailPage(workId);
+    window.scrollTo(0, 0);
+  };
+
+  const closeDetailPage = () => {
+    window.history.back();
+  };
+
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -52,10 +83,11 @@ const Portfolio = () => {
 
   const navItems = [
     { id: "hero", label: "Top" },
-    { id: "works", label: "作品" },
-    { id: "services", label: "対応業務" },
+    { id: "about", label: "自己紹介" },
+    { id: "works", label: "制作プロジェクト" },
+    { id: "services", label: "対応可能な業務" },
     { id: "tools", label: "使用ツール" },
-    { id: "flow", label: "ご依頼" },
+    { id: "flow", label: "ご依頼について" },
     { id: "timeline", label: "経歴" },
     { id: "vision", label: "ビジョン" },
     { id: "contact", label: "連絡先" },
@@ -320,10 +352,7 @@ const Portfolio = () => {
             }}
           >
             <button
-              onClick={() => {
-                setDetailPage(null);
-                window.scrollTo(0, 0);
-              }}
+              onClick={closeDetailPage}
               style={{
                 background: "none",
                 border: `1px solid ${detail.color}40`,
@@ -685,6 +714,8 @@ const Portfolio = () => {
 
           {/* Right: About */}
           <div
+            id="about"
+            ref={(el) => (sectionRefs.current.about = el)}
             style={{
               flex: "1 1 360px",
               maxWidth: 440,
@@ -852,10 +883,7 @@ const Portfolio = () => {
                   </p>
 
                   <button
-                    onClick={() => {
-                      setDetailPage(work.id);
-                      window.scrollTo(0, 0);
-                    }}
+                    onClick={() => openDetailPage(work.id)}
                     style={{
                       display: "inline-flex",
                       alignItems: "center",
@@ -897,7 +925,7 @@ const Portfolio = () => {
         ref={(el) => (sectionRefs.current.services = el)}
         style={{
           padding: "100px 24px",
-          maxWidth: 800,
+          maxWidth: 1000,
           margin: "0 auto",
         }}
       >
@@ -935,12 +963,13 @@ const Portfolio = () => {
               boxShadow: "0 4px 24px rgba(0,0,0,0.04)",
             }}
           >
+            {/* Title */}
             <div
               style={{
                 display: "flex",
                 alignItems: "center",
                 gap: 14,
-                marginBottom: 24,
+                marginBottom: 28,
               }}
             >
               <div
@@ -954,14 +983,7 @@ const Portfolio = () => {
                   justifyContent: "center",
                 }}
               >
-                <svg
-                  width="22"
-                  height="22"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="white"
-                  strokeWidth="2"
-                >
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
                   <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
                 </svg>
               </div>
@@ -973,52 +995,269 @@ const Portfolio = () => {
                   color: "#2D2D2D",
                 }}
               >
-                AIチャットボット構築（Dify）
+                AIチャットボット構築
               </h3>
             </div>
 
             <p
               style={{
-                fontSize: 14,
+                fontSize: 15,
                 lineHeight: 2,
                 color: "#555",
-                marginBottom: 24,
+                marginBottom: 32,
               }}
             >
-              お客様の業種・課題に合わせたAIチャットボットを構築します。ヒアリングをもとに、業務フローに合った設計・開発を行います。24時間対応の問い合わせ・予約受付・FAQ応答など、用途に応じて柔軟に対応。Google
-              スプレッドシート連携やメール通知など、既存の業務ツールとの接続も可能です。納品後の動作確認・修正対応も含めて丁寧にサポートします。
+              お客様の業種・課題に合わせたAIチャットボットを設計・構築します。
+              問い合わせ対応の自動化、予約受付、FAQ応答など、目的に応じて柔軟に対応。
+              LINE・Slack・Webサイトなど、ご利用中のツールへの導入もサポートします。
             </p>
 
+            {/* 解決できる課題 + サービス内容 2カラム */}
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+                gap: 24,
+                marginBottom: 32,
+              }}
+            >
+              {/* 解決できる課題 */}
+              <div
+                style={{
+                  background: "#FAFAF7",
+                  borderRadius: 14,
+                  padding: "24px 24px",
+                }}
+              >
+                <h4
+                  style={{
+                    fontFamily: "'Zen Maru Gothic', sans-serif",
+                    fontSize: 14,
+                    fontWeight: 700,
+                    color: "#5B8C7E",
+                    marginBottom: 16,
+                  }}
+                >
+                  解決できる課題（例）
+                </h4>
+                {[
+                  "問い合わせ対応に追われて、本来の業務に集中できない",
+                  "営業時間外の問い合わせに対応できず、機会損失が発生している",
+                  "同じ質問に何度も答えていて非効率",
+                ].map((item, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      display: "flex",
+                      gap: 10,
+                      fontSize: 14,
+                      color: "#555",
+                      lineHeight: 1.8,
+                      marginBottom: 10,
+                    }}
+                  >
+                    <span style={{ color: "#D4A574", fontWeight: 700, flexShrink: 0 }}>-</span>
+                    <span>{item}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* サービス内容 */}
+              <div
+                style={{
+                  background: "#FAFAF7",
+                  borderRadius: 14,
+                  padding: "24px 24px",
+                }}
+              >
+                <h4
+                  style={{
+                    fontFamily: "'Zen Maru Gothic', sans-serif",
+                    fontSize: 14,
+                    fontWeight: 700,
+                    color: "#5B8C7E",
+                    marginBottom: 16,
+                  }}
+                >
+                  サービス内容
+                </h4>
+                {[
+                  "要件ヒアリング・業務フローの整理",
+                  "チャットボットの設計・構築",
+                  "LINE / Slack / Webサイトなどへの導入",
+                  "回答内容の登録・調整",
+                  "納品後の修正サポート",
+                ].map((item, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      display: "flex",
+                      gap: 10,
+                      fontSize: 14,
+                      color: "#555",
+                      lineHeight: 1.8,
+                      marginBottom: 10,
+                    }}
+                  >
+                    <span style={{ color: "#5B8C7E", fontWeight: 700, flexShrink: 0 }}>-</span>
+                    <span>{item}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 料金・納期 */}
             <div
               style={{
                 display: "grid",
                 gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
                 gap: 16,
-                padding: "20px 0 0",
+                padding: "24px 0",
                 borderTop: "1px solid #F0F0EA",
+                borderBottom: "1px solid #F0F0EA",
+                marginBottom: 28,
               }}
             >
-              {[
-                { label: "料金", value: "ご相談ください", sub: "ご予算に応じて柔軟に対応" },
-                { label: "納期目安", value: "2〜4週間", sub: "要件の規模により変動" },
-              ].map((item, i) => (
-                <div key={i}>
-                  <p style={{ fontSize: 11, color: "#999", marginBottom: 4 }}>
-                    {item.label}
-                  </p>
-                  <p
+              <div>
+                <p style={{ fontSize: 11, color: "#999", marginBottom: 4 }}>料金目安</p>
+                <p
+                  style={{
+                    fontSize: 16,
+                    fontWeight: 700,
+                    color: "#5B8C7E",
+                    fontFamily: "'Zen Maru Gothic', sans-serif",
+                  }}
+                >
+                  ご相談ください
+                </p>
+                <p style={{ fontSize: 12, color: "#AAA" }}>ご予算に応じて柔軟に対応</p>
+              </div>
+              <div>
+                <p style={{ fontSize: 11, color: "#999", marginBottom: 4 }}>納期目安</p>
+                <p
+                  style={{
+                    fontSize: 16,
+                    fontWeight: 700,
+                    color: "#5B8C7E",
+                    fontFamily: "'Zen Maru Gothic', sans-serif",
+                  }}
+                >
+                  2週間〜1ヶ月
+                </p>
+                <p style={{ fontSize: 12, color: "#AAA" }}>要件の規模により変動</p>
+              </div>
+            </div>
+
+            {/* 導入後のサポート + こんな方におすすめ */}
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+                gap: 24,
+                marginBottom: 28,
+              }}
+            >
+              <div>
+                <h4
+                  style={{
+                    fontFamily: "'Zen Maru Gothic', sans-serif",
+                    fontSize: 14,
+                    fontWeight: 700,
+                    color: "#5B8C7E",
+                    marginBottom: 14,
+                  }}
+                >
+                  導入後のサポート
+                </h4>
+                {[
+                  "納品後1ヶ月間は無料で修正対応",
+                  "回答内容の追加・変更もサポート",
+                  "運用についての質問はいつでもOK",
+                ].map((item, i) => (
+                  <div
+                    key={i}
                     style={{
-                      fontSize: 16,
-                      fontWeight: 700,
-                      color: "#5B8C7E",
-                      fontFamily: "'Zen Maru Gothic', sans-serif",
+                      display: "flex",
+                      gap: 10,
+                      fontSize: 14,
+                      color: "#555",
+                      lineHeight: 1.8,
+                      marginBottom: 8,
                     }}
                   >
-                    {item.value}
-                  </p>
-                  <p style={{ fontSize: 11, color: "#AAA" }}>{item.sub}</p>
-                </div>
-              ))}
+                    <span style={{ color: "#7EBAB5", fontWeight: 700, flexShrink: 0 }}>-</span>
+                    <span>{item}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div>
+                <h4
+                  style={{
+                    fontFamily: "'Zen Maru Gothic', sans-serif",
+                    fontSize: 14,
+                    fontWeight: 700,
+                    color: "#5B8C7E",
+                    marginBottom: 14,
+                  }}
+                >
+                  こんな方におすすめ
+                </h4>
+                {[
+                  "問い合わせ対応を自動化したい",
+                  "24時間対応できる仕組みが欲しい",
+                  "少人数で運営していて手が回らない",
+                ].map((item, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      display: "flex",
+                      gap: 10,
+                      fontSize: 14,
+                      color: "#555",
+                      lineHeight: 1.8,
+                      marginBottom: 8,
+                    }}
+                  >
+                    <span style={{ color: "#D4A574", fontWeight: 700, flexShrink: 0 }}>-</span>
+                    <span>{item}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* CTA */}
+            <div
+              style={{
+                background: "rgba(126, 186, 181, 0.08)",
+                borderRadius: 14,
+                padding: "20px 24px",
+                textAlign: "center",
+              }}
+            >
+              <p
+                style={{
+                  fontSize: 15,
+                  fontWeight: 600,
+                  color: "#5B8C7E",
+                  fontFamily: "'Zen Maru Gothic', sans-serif",
+                  lineHeight: 1.8,
+                }}
+              >
+                まずはお気軽にご相談ください
+              </p>
+              <p
+                style={{
+                  fontSize: 13,
+                  color: "#888",
+                  marginTop: 8,
+                  lineHeight: 1.7,
+                }}
+              >
+                「こんなことできる？」「費用感を知りたい」など、どんな小さなことでも大丈夫です。
+                <br />
+                お見積りは無料ですので、お気軽にご連絡ください。
+              </p>
             </div>
           </div>
         </FadeIn>
@@ -1030,7 +1269,7 @@ const Portfolio = () => {
         ref={(el) => (sectionRefs.current.tools = el)}
         style={{
           padding: "100px 24px",
-          maxWidth: 800,
+          maxWidth: 1000,
           margin: "0 auto",
         }}
       >
@@ -1135,7 +1374,7 @@ const Portfolio = () => {
         ref={(el) => (sectionRefs.current.flow = el)}
         style={{
           padding: "100px 24px",
-          maxWidth: 800,
+          maxWidth: 1000,
           margin: "0 auto",
         }}
       >
@@ -1160,7 +1399,7 @@ const Portfolio = () => {
               color: "#2D2D2D",
             }}
           >
-            ご依頼の進め方
+            ご依頼について
           </h2>
         </FadeIn>
 
@@ -1176,7 +1415,7 @@ const Portfolio = () => {
           >
             {[
               { icon: "¥", label: "料金目安", value: "ご相談ください", sub: "ご予算に応じて柔軟に対応" },
-              { icon: "⏱", label: "納期目安", value: "2〜4週間", sub: "要件の規模により変動" },
+              { icon: "⏱", label: "納期目安", value: "2週間〜1ヶ月", sub: "要件の規模により変動" },
               { icon: "✉", label: "連絡先", value: "○○○@○○○", sub: "メールにてお問い合わせ" },
               { icon: "⏰", label: "対応時間", value: "平日19時以降 / 土日", sub: "返信：24時間以内" },
             ].map((item, i) => (
@@ -1302,7 +1541,7 @@ const Portfolio = () => {
         ref={(el) => (sectionRefs.current.timeline = el)}
         style={{
           padding: "100px 24px",
-          maxWidth: 800,
+          maxWidth: 1000,
           margin: "0 auto",
         }}
       >
@@ -1415,7 +1654,7 @@ const Portfolio = () => {
         ref={(el) => (sectionRefs.current.vision = el)}
         style={{
           padding: "100px 24px",
-          maxWidth: 800,
+          maxWidth: 1000,
           margin: "0 auto",
         }}
       >
@@ -1484,7 +1723,7 @@ const Portfolio = () => {
         ref={(el) => (sectionRefs.current.contact = el)}
         style={{
           padding: "100px 24px 60px",
-          maxWidth: 800,
+          maxWidth: 1000,
           margin: "0 auto",
         }}
       >
