@@ -2,6 +2,35 @@ import { useState, useEffect, useRef } from "react";
 
 const NAV_HEIGHT = 60;
 
+const FadeIn = ({ children, delay = 0, className = "" }) => {
+  const ref = useRef(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) setVisible(true);
+      },
+      { threshold: 0.1 }
+    );
+    if (ref.current) observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div
+      ref={ref}
+      className={className}
+      style={{
+        opacity: visible ? 1 : 0,
+        transition: `opacity 0.7s ease ${delay}s`,
+      }}
+    >
+      {children}
+    </div>
+  );
+};
+
 const Portfolio = () => {
   const [activeSection, setActiveSection] = useState("hero");
   const [menuOpen, setMenuOpen] = useState(false);
@@ -83,7 +112,7 @@ const Portfolio = () => {
 
   const navItems = [
     { id: "hero", label: "Top" },
-    { id: "about", label: "自己紹介" },
+    { id: "hero", label: "自己紹介" },
     { id: "works", label: "制作プロジェクト" },
     { id: "services", label: "対応可能な業務" },
     { id: "tools", label: "使用ツール" },
@@ -281,36 +310,6 @@ const Portfolio = () => {
         },
       ],
     },
-  };
-
-  const FadeIn = ({ children, delay = 0, className = "" }) => {
-    const ref = useRef(null);
-    const [visible, setVisible] = useState(false);
-
-    useEffect(() => {
-      const observer = new IntersectionObserver(
-        ([entry]) => {
-          if (entry.isIntersecting) setVisible(true);
-        },
-        { threshold: 0.1 }
-      );
-      if (ref.current) observer.observe(ref.current);
-      return () => observer.disconnect();
-    }, []);
-
-    return (
-      <div
-        ref={ref}
-        className={className}
-        style={{
-          opacity: visible ? 1 : 0,
-          transform: visible ? "translateY(0)" : "translateY(30px)",
-          transition: `opacity 0.8s ease ${delay}s, transform 0.8s ease ${delay}s`,
-        }}
-      >
-        {children}
-      </div>
-    );
   };
 
   // Detail page for each work
@@ -553,7 +552,7 @@ const Portfolio = () => {
             }}
             onClick={() => scrollTo("hero")}
           >
-            Keisuke
+            小西 啓介 | ポートフォリオ
           </span>
 
           {/* Desktop Nav */}
@@ -708,14 +707,12 @@ const Portfolio = () => {
                 fontWeight: 400,
               }}
             >
-              Keisuke ｜ AIエージェント開発 × 業務効率化
+              AIエージェント開発 × 業務効率化
             </p>
           </div>
 
           {/* Right: About */}
           <div
-            id="about"
-            ref={(el) => (sectionRefs.current.about = el)}
             style={{
               flex: "1 1 360px",
               maxWidth: 440,
@@ -738,6 +735,9 @@ const Portfolio = () => {
               }}
             >
               ABOUT
+            </p>
+            <p style={{ marginBottom: 14 }}>
+              ご覧いただきありがとうございます。小西啓介（こにしけいすけ）と申します。
             </p>
             <p style={{ marginBottom: 14 }}>
               元中学校の理科教員で、現在はインフラエンジニアとして働きながら、AIチャットボットの開発を行っています。
@@ -954,22 +954,23 @@ const Portfolio = () => {
           </h2>
         </FadeIn>
 
+        {/* 説明 */}
         <FadeIn delay={0.1}>
           <div
             style={{
               background: "white",
               borderRadius: 20,
-              padding: "40px 36px",
+              padding: "36px 36px",
               boxShadow: "0 4px 24px rgba(0,0,0,0.04)",
+              marginBottom: 24,
             }}
           >
-            {/* Title */}
             <div
               style={{
                 display: "flex",
                 alignItems: "center",
                 gap: 14,
-                marginBottom: 28,
+                marginBottom: 20,
               }}
             >
               <div
@@ -981,72 +982,114 @@ const Portfolio = () => {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
+                  flexShrink: 0,
                 }}
               >
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
                   <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
                 </svg>
               </div>
-              <h3
-                style={{
-                  fontFamily: "'Zen Maru Gothic', sans-serif",
-                  fontSize: 18,
-                  fontWeight: 700,
-                  color: "#2D2D2D",
-                }}
-              >
-                AIチャットボット構築
-              </h3>
+              <div>
+                <h3
+                  style={{
+                    fontFamily: "'Zen Maru Gothic', sans-serif",
+                    fontSize: 18,
+                    fontWeight: 700,
+                    color: "#2D2D2D",
+                  }}
+                >
+                  AIチャットボット構築
+                </h3>
+              </div>
             </div>
-
             <p
               style={{
                 fontSize: 15,
                 lineHeight: 2,
                 color: "#555",
-                marginBottom: 32,
               }}
             >
               お客様の業種・課題に合わせたAIチャットボットを設計・構築します。
               問い合わせ対応の自動化、予約受付、FAQ応答など、目的に応じて柔軟に対応。
               LINE・Slack・Webサイトなど、ご利用中のツールへの導入もサポートします。
             </p>
+          </div>
+        </FadeIn>
 
-            {/* 解決できる課題 + サービス内容 2カラム */}
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-                gap: 24,
-                marginBottom: 32,
-              }}
-            >
-              {/* 解決できる課題 */}
+        {/* 4カード統一レイアウト */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(440px, 1fr))",
+            gap: 20,
+            marginBottom: 24,
+          }}
+        >
+          {[
+            {
+              title: "解決できる課題（例）",
+              color: "#D4A574",
+              items: [
+                "問い合わせ対応に追われて、本来の業務に集中できない",
+                "営業時間外の問い合わせに対応できず、機会損失が発生している",
+                "同じ質問に何度も答えていて非効率",
+              ],
+            },
+            {
+              title: "サービス内容",
+              color: "#5B8C7E",
+              items: [
+                "要件ヒアリング・業務フローの整理",
+                "チャットボットの設計・構築",
+                "LINE / Slack / Webサイトなどへの導入",
+                "回答内容の登録・調整",
+                "納品後の修正サポート",
+              ],
+            },
+            {
+              title: "導入後のサポート",
+              color: "#7EBAB5",
+              items: [
+                "納品後1ヶ月間は無料で修正対応",
+                "回答内容の追加・変更もサポート",
+                "運用についての質問はいつでもOK",
+              ],
+            },
+            {
+              title: "こんな方におすすめ",
+              color: "#9BB5D6",
+              items: [
+                "問い合わせ対応を自動化したい",
+                "24時間対応できる仕組みが欲しい",
+                "少人数で運営していて手が回らない",
+              ],
+            },
+          ].map((card, i) => (
+            <FadeIn key={i} delay={0.15 + i * 0.08}>
               <div
                 style={{
-                  background: "#FAFAF7",
-                  borderRadius: 14,
-                  padding: "24px 24px",
+                  background: "white",
+                  borderRadius: 16,
+                  padding: "28px 28px",
+                  boxShadow: "0 2px 16px rgba(0,0,0,0.04)",
+                  borderTop: `3px solid ${card.color}`,
+                  height: "100%",
                 }}
               >
                 <h4
                   style={{
                     fontFamily: "'Zen Maru Gothic', sans-serif",
-                    fontSize: 14,
+                    fontSize: 15,
                     fontWeight: 700,
-                    color: "#5B8C7E",
-                    marginBottom: 16,
+                    color: card.color,
+                    marginBottom: 18,
                   }}
                 >
-                  解決できる課題（例）
+                  {card.title}
                 </h4>
-                {[
-                  "問い合わせ対応に追われて、本来の業務に集中できない",
-                  "営業時間外の問い合わせに対応できず、機会損失が発生している",
-                  "同じ質問に何度も答えていて非効率",
-                ].map((item, i) => (
+                {card.items.map((item, j) => (
                   <div
-                    key={i}
+                    key={j}
                     style={{
                       display: "flex",
                       gap: 10,
@@ -1056,209 +1099,98 @@ const Portfolio = () => {
                       marginBottom: 10,
                     }}
                   >
-                    <span style={{ color: "#D4A574", fontWeight: 700, flexShrink: 0 }}>-</span>
+                    <span
+                      style={{
+                        color: card.color,
+                        fontSize: 8,
+                        marginTop: 7,
+                        flexShrink: 0,
+                      }}
+                    >
+                      ●
+                    </span>
                     <span>{item}</span>
                   </div>
                 ))}
               </div>
+            </FadeIn>
+          ))}
+        </div>
 
-              {/* サービス内容 */}
+        {/* 料金・納期 */}
+        <FadeIn delay={0.5}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: 20,
+              marginBottom: 24,
+            }}
+          >
+            {[
+              { label: "料金目安", value: "ご相談ください", sub: "ご予算に応じて柔軟に対応" },
+              { label: "納期目安", value: "2週間〜1ヶ月", sub: "要件の規模により変動" },
+            ].map((item, i) => (
               <div
+                key={i}
                 style={{
-                  background: "#FAFAF7",
-                  borderRadius: 14,
-                  padding: "24px 24px",
+                  background: "white",
+                  borderRadius: 16,
+                  padding: "24px 28px",
+                  boxShadow: "0 2px 16px rgba(0,0,0,0.04)",
+                  textAlign: "center",
                 }}
               >
-                <h4
-                  style={{
-                    fontFamily: "'Zen Maru Gothic', sans-serif",
-                    fontSize: 14,
-                    fontWeight: 700,
-                    color: "#5B8C7E",
-                    marginBottom: 16,
-                  }}
-                >
-                  サービス内容
-                </h4>
-                {[
-                  "要件ヒアリング・業務フローの整理",
-                  "チャットボットの設計・構築",
-                  "LINE / Slack / Webサイトなどへの導入",
-                  "回答内容の登録・調整",
-                  "納品後の修正サポート",
-                ].map((item, i) => (
-                  <div
-                    key={i}
-                    style={{
-                      display: "flex",
-                      gap: 10,
-                      fontSize: 14,
-                      color: "#555",
-                      lineHeight: 1.8,
-                      marginBottom: 10,
-                    }}
-                  >
-                    <span style={{ color: "#5B8C7E", fontWeight: 700, flexShrink: 0 }}>-</span>
-                    <span>{item}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* 料金・納期 */}
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-                gap: 16,
-                padding: "24px 0",
-                borderTop: "1px solid #F0F0EA",
-                borderBottom: "1px solid #F0F0EA",
-                marginBottom: 28,
-              }}
-            >
-              <div>
-                <p style={{ fontSize: 11, color: "#999", marginBottom: 4 }}>料金目安</p>
+                <p style={{ fontSize: 12, color: "#999", marginBottom: 6 }}>{item.label}</p>
                 <p
                   style={{
-                    fontSize: 16,
+                    fontSize: 18,
                     fontWeight: 700,
                     color: "#5B8C7E",
                     fontFamily: "'Zen Maru Gothic', sans-serif",
+                    marginBottom: 4,
                   }}
                 >
-                  ご相談ください
+                  {item.value}
                 </p>
-                <p style={{ fontSize: 12, color: "#AAA" }}>ご予算に応じて柔軟に対応</p>
+                <p style={{ fontSize: 12, color: "#BBB" }}>{item.sub}</p>
               </div>
-              <div>
-                <p style={{ fontSize: 11, color: "#999", marginBottom: 4 }}>納期目安</p>
-                <p
-                  style={{
-                    fontSize: 16,
-                    fontWeight: 700,
-                    color: "#5B8C7E",
-                    fontFamily: "'Zen Maru Gothic', sans-serif",
-                  }}
-                >
-                  2週間〜1ヶ月
-                </p>
-                <p style={{ fontSize: 12, color: "#AAA" }}>要件の規模により変動</p>
-              </div>
-            </div>
+            ))}
+          </div>
+        </FadeIn>
 
-            {/* 導入後のサポート + こんな方におすすめ */}
-            <div
+        {/* CTA */}
+        <FadeIn delay={0.6}>
+          <div
+            style={{
+              background: "rgba(126, 186, 181, 0.08)",
+              borderRadius: 16,
+              padding: "28px 32px",
+              textAlign: "center",
+            }}
+          >
+            <p
               style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-                gap: 24,
-                marginBottom: 28,
+                fontSize: 16,
+                fontWeight: 600,
+                color: "#5B8C7E",
+                fontFamily: "'Zen Maru Gothic', sans-serif",
+                marginBottom: 10,
               }}
             >
-              <div>
-                <h4
-                  style={{
-                    fontFamily: "'Zen Maru Gothic', sans-serif",
-                    fontSize: 14,
-                    fontWeight: 700,
-                    color: "#5B8C7E",
-                    marginBottom: 14,
-                  }}
-                >
-                  導入後のサポート
-                </h4>
-                {[
-                  "納品後1ヶ月間は無料で修正対応",
-                  "回答内容の追加・変更もサポート",
-                  "運用についての質問はいつでもOK",
-                ].map((item, i) => (
-                  <div
-                    key={i}
-                    style={{
-                      display: "flex",
-                      gap: 10,
-                      fontSize: 14,
-                      color: "#555",
-                      lineHeight: 1.8,
-                      marginBottom: 8,
-                    }}
-                  >
-                    <span style={{ color: "#7EBAB5", fontWeight: 700, flexShrink: 0 }}>-</span>
-                    <span>{item}</span>
-                  </div>
-                ))}
-              </div>
-
-              <div>
-                <h4
-                  style={{
-                    fontFamily: "'Zen Maru Gothic', sans-serif",
-                    fontSize: 14,
-                    fontWeight: 700,
-                    color: "#5B8C7E",
-                    marginBottom: 14,
-                  }}
-                >
-                  こんな方におすすめ
-                </h4>
-                {[
-                  "問い合わせ対応を自動化したい",
-                  "24時間対応できる仕組みが欲しい",
-                  "少人数で運営していて手が回らない",
-                ].map((item, i) => (
-                  <div
-                    key={i}
-                    style={{
-                      display: "flex",
-                      gap: 10,
-                      fontSize: 14,
-                      color: "#555",
-                      lineHeight: 1.8,
-                      marginBottom: 8,
-                    }}
-                  >
-                    <span style={{ color: "#D4A574", fontWeight: 700, flexShrink: 0 }}>-</span>
-                    <span>{item}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* CTA */}
-            <div
+              まずはお気軽にご相談ください
+            </p>
+            <p
               style={{
-                background: "rgba(126, 186, 181, 0.08)",
-                borderRadius: 14,
-                padding: "20px 24px",
-                textAlign: "center",
+                fontSize: 14,
+                color: "#888",
+                lineHeight: 1.8,
               }}
             >
-              <p
-                style={{
-                  fontSize: 15,
-                  fontWeight: 600,
-                  color: "#5B8C7E",
-                  fontFamily: "'Zen Maru Gothic', sans-serif",
-                  lineHeight: 1.8,
-                }}
-              >
-                まずはお気軽にご相談ください
-              </p>
-              <p
-                style={{
-                  fontSize: 13,
-                  color: "#888",
-                  marginTop: 8,
-                  lineHeight: 1.7,
-                }}
-              >
-                「こんなことできる？」「費用感を知りたい」など、どんな小さなことでも大丈夫です。
-                <br />
-                お見積りは無料ですので、お気軽にご連絡ください。
-              </p>
-            </div>
+              「こんなことできる？」「費用感を知りたい」など、どんな小さなことでも大丈夫です。
+              <br />
+              お見積りは無料ですので、お気軽にご連絡ください。
+            </p>
           </div>
         </FadeIn>
       </section>
@@ -1416,7 +1348,7 @@ const Portfolio = () => {
             {[
               { icon: "¥", label: "料金目安", value: "ご相談ください", sub: "ご予算に応じて柔軟に対応" },
               { icon: "⏱", label: "納期目安", value: "2週間〜1ヶ月", sub: "要件の規模により変動" },
-              { icon: "✉", label: "連絡先", value: "○○○@○○○", sub: "メールにてお問い合わせ" },
+              { icon: "✉", label: "連絡先", value: "konishi.ai.dev@gmail.com", sub: "メールにてお問い合わせ" },
               { icon: "⏰", label: "対応時間", value: "平日19時以降 / 土日", sub: "返信：24時間以内" },
             ].map((item, i) => (
               <div
@@ -1806,7 +1738,7 @@ const Portfolio = () => {
                   fontWeight: 500,
                 }}
               >
-                ○○○@○○○
+                konishi.ai.dev@gmail.com
               </p>
               <p
                 style={{
@@ -1843,7 +1775,7 @@ const Portfolio = () => {
             color: "#BBB",
           }}
         >
-          © 2025 Keisuke — AI Agent Developer
+          © 2025 小西啓介 — AI Agent Developer
         </div>
       </section>
     </div>
