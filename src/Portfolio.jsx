@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import ChatbotDemo from "./components/ChatbotDemo";
 
 const NAV_HEIGHT = 60;
 
@@ -31,22 +32,38 @@ const FadeIn = ({ children, delay = 0, className = "" }) => {
   );
 };
 
+// Hash ↔ detailPage key mapping
+const hashToDetail = {
+  "#dental": "dental",
+  "#real-estate": "realestate",
+  "#school": "school",
+};
+const detailToHash = {
+  dental: "#dental",
+  realestate: "#real-estate",
+  school: "#school",
+};
+
+const getDetailFromHash = () => {
+  return hashToDetail[window.location.hash] || null;
+};
+
 const Portfolio = () => {
   const [activeSection, setActiveSection] = useState("hero");
   const [menuOpen, setMenuOpen] = useState(false);
-  const [detailPage, setDetailPage] = useState(null);
+  const [detailPage, setDetailPage] = useState(getDetailFromHash);
   const sectionRefs = useRef({});
   const isScrollingRef = useRef(false);
   const scrollTimerRef = useRef(null);
 
-  // Handle browser back/forward for detail pages
+  // Handle hash changes (back/forward, direct URL edit)
   useEffect(() => {
-    const handlePopState = (e) => {
-      if (e.state && e.state.detailPage) {
-        setDetailPage(e.state.detailPage);
+    const handleHashChange = () => {
+      const detail = getDetailFromHash();
+      setDetailPage(detail);
+      if (detail) {
+        window.scrollTo(0, 0);
       } else {
-        setDetailPage(null);
-        // Scroll to works section after returning
         setTimeout(() => {
           const el = sectionRefs.current.works;
           if (el) {
@@ -56,18 +73,16 @@ const Portfolio = () => {
         }, 50);
       }
     };
-    window.addEventListener("popstate", handlePopState);
-    return () => window.removeEventListener("popstate", handlePopState);
+    window.addEventListener("hashchange", handleHashChange);
+    return () => window.removeEventListener("hashchange", handleHashChange);
   }, []);
 
   const openDetailPage = (workId) => {
-    window.history.pushState({ detailPage: workId }, "");
-    setDetailPage(workId);
-    window.scrollTo(0, 0);
+    window.location.hash = detailToHash[workId];
   };
 
   const closeDetailPage = () => {
-    window.history.back();
+    history.back();
   };
 
   useEffect(() => {
@@ -312,9 +327,25 @@ const Portfolio = () => {
     },
   };
 
+  const chatbotDemos = {
+    dental: {
+      title: "デモ（歯科：取りこぼし防止ボット）",
+      src: "https://udify.app/chatbot/XVdt8RzVoFLWKWmC",
+    },
+    realestate: {
+      title: "デモ（不動産：内見予約ボット）",
+      src: "https://udify.app/chatbot/EaDPdiAuOblUfomq",
+    },
+    school: {
+      title: "デモ（学習塾：アンケート/退塾防止ボット）",
+      src: "https://udify.app/chatbot/ciNWedbcsFQ9ZkBE",
+    },
+  };
+
   // Detail page for each work
   if (detailPage && workDetails[detailPage]) {
     const detail = workDetails[detailPage];
+    const demo = chatbotDemos[detailPage];
     return (
       <div
         style={{
@@ -499,6 +530,10 @@ const Portfolio = () => {
               )}
             </div>
           ))}
+
+          {demo && (
+            <ChatbotDemo title={demo.title} src={demo.src} />
+          )}
         </div>
       </div>
     );
@@ -645,25 +680,27 @@ const Portfolio = () => {
         >
           {/* Left: Hero message */}
           <div style={{ textAlign: "center", flex: "1 1 400px", maxWidth: 520 }}>
-            {/* Avatar placeholder */}
+            {/* Avatar */}
             <div
               style={{
-                width: 90,
-                height: 90,
+                width: 100,
+                height: 100,
                 borderRadius: "50%",
-                background: "linear-gradient(135deg, #7EBAB5 0%, #5B8C7E 100%)",
                 margin: "0 auto 20px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 32,
-                color: "white",
-                fontFamily: "'Zen Maru Gothic', sans-serif",
-                fontWeight: 700,
+                overflow: "hidden",
                 boxShadow: "0 8px 32px rgba(91, 140, 126, 0.25)",
+                border: "3px solid rgba(91, 140, 126, 0.2)",
               }}
             >
-              K
+              <img
+                src={`${import.meta.env.BASE_URL}icon.png`}
+                alt="小西啓介"
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                }}
+              />
             </div>
 
             <p
