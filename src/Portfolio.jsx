@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import ChatbotDemo from "./components/ChatbotDemo";
 
 const NAV_HEIGHT = 60;
 
@@ -312,9 +313,25 @@ const Portfolio = () => {
     },
   };
 
+  const chatbotDemos = {
+    dental: {
+      title: "デモ（歯科：取りこぼし防止ボット）",
+      src: "https://udify.app/chatbot/XVdt8RzVoFLWKWmC",
+    },
+    realestate: {
+      title: "デモ（不動産：内見予約ボット）",
+      src: "https://udify.app/chatbot/EaDPdiAuOblUfomq",
+    },
+    school: {
+      title: "デモ（学習塾：アンケート/退塾防止ボット）",
+      src: "https://udify.app/chatbot/ciNWedbcsFQ9ZkBE",
+    },
+  };
+
   // Detail page for each work
   if (detailPage && workDetails[detailPage]) {
     const detail = workDetails[detailPage];
+    const demo = chatbotDemos[detailPage];
     return (
       <div
         style={{
@@ -499,6 +516,10 @@ const Portfolio = () => {
               )}
             </div>
           ))}
+
+          {demo && (
+            <ChatbotDemo title={demo.title} src={demo.src} />
+          )}
         </div>
       </div>
     );
