@@ -680,25 +680,27 @@ const Portfolio = () => {
         >
           {/* Left: Hero message */}
           <div style={{ textAlign: "center", flex: "1 1 400px", maxWidth: 520 }}>
-            {/* Avatar placeholder */}
+            {/* Avatar */}
             <div
               style={{
-                width: 90,
-                height: 90,
+                width: 100,
+                height: 100,
                 borderRadius: "50%",
-                background: "linear-gradient(135deg, #7EBAB5 0%, #5B8C7E 100%)",
                 margin: "0 auto 20px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 32,
-                color: "white",
-                fontFamily: "'Zen Maru Gothic', sans-serif",
-                fontWeight: 700,
+                overflow: "hidden",
                 boxShadow: "0 8px 32px rgba(91, 140, 126, 0.25)",
+                border: "3px solid rgba(91, 140, 126, 0.2)",
               }}
             >
-              K
+              <img
+                src={`${import.meta.env.BASE_URL}icon.png`}
+                alt="小西啓介"
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                }}
+              />
             </div>
 
             <p
