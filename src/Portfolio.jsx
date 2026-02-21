@@ -32,22 +32,38 @@ const FadeIn = ({ children, delay = 0, className = "" }) => {
   );
 };
 
+// Hash ↔ detailPage key mapping
+const hashToDetail = {
+  "#dental": "dental",
+  "#real-estate": "realestate",
+  "#school": "school",
+};
+const detailToHash = {
+  dental: "#dental",
+  realestate: "#real-estate",
+  school: "#school",
+};
+
+const getDetailFromHash = () => {
+  return hashToDetail[window.location.hash] || null;
+};
+
 const Portfolio = () => {
   const [activeSection, setActiveSection] = useState("hero");
   const [menuOpen, setMenuOpen] = useState(false);
-  const [detailPage, setDetailPage] = useState(null);
+  const [detailPage, setDetailPage] = useState(getDetailFromHash);
   const sectionRefs = useRef({});
   const isScrollingRef = useRef(false);
   const scrollTimerRef = useRef(null);
 
-  // Handle browser back/forward for detail pages
+  // Handle hash changes (back/forward, direct URL edit)
   useEffect(() => {
-    const handlePopState = (e) => {
-      if (e.state && e.state.detailPage) {
-        setDetailPage(e.state.detailPage);
+    const handleHashChange = () => {
+      const detail = getDetailFromHash();
+      setDetailPage(detail);
+      if (detail) {
+        window.scrollTo(0, 0);
       } else {
-        setDetailPage(null);
-        // Scroll to works section after returning
         setTimeout(() => {
           const el = sectionRefs.current.works;
           if (el) {
@@ -57,18 +73,16 @@ const Portfolio = () => {
         }, 50);
       }
     };
-    window.addEventListener("popstate", handlePopState);
-    return () => window.removeEventListener("popstate", handlePopState);
+    window.addEventListener("hashchange", handleHashChange);
+    return () => window.removeEventListener("hashchange", handleHashChange);
   }, []);
 
   const openDetailPage = (workId) => {
-    window.history.pushState({ detailPage: workId }, "");
-    setDetailPage(workId);
-    window.scrollTo(0, 0);
+    window.location.hash = detailToHash[workId];
   };
 
   const closeDetailPage = () => {
-    window.history.back();
+    history.back();
   };
 
   useEffect(() => {
