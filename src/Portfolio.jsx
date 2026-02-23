@@ -52,9 +52,27 @@ const Portfolio = () => {
   const [activeSection, setActiveSection] = useState("hero");
   const [menuOpen, setMenuOpen] = useState(false);
   const [detailPage, setDetailPage] = useState(getDetailFromHash);
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 768);
   const sectionRefs = useRef({});
   const isScrollingRef = useRef(false);
   const scrollTimerRef = useRef(null);
+
+  // Responsive detection
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    if (isMobile && menuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [isMobile, menuOpen]);
 
   // Handle hash changes (back/forward, direct URL edit)
   useEffect(() => {
@@ -406,7 +424,7 @@ const Portfolio = () => {
             <h1
               style={{
                 fontFamily: "'Zen Maru Gothic', sans-serif",
-                fontSize: 16,
+                fontSize: isMobile ? 13 : 16,
                 fontWeight: 700,
                 color: "#2D2D2D",
               }}
@@ -425,7 +443,7 @@ const Portfolio = () => {
                 marginBottom: 36,
                 background: "white",
                 borderRadius: 16,
-                padding: "32px 32px",
+                padding: isMobile ? "24px 18px" : "32px 32px",
                 boxShadow: "0 2px 16px rgba(0,0,0,0.04)",
               }}
             >
@@ -499,7 +517,7 @@ const Portfolio = () => {
                 <div
                   style={{
                     display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+                    gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fit, minmax(200px, 1fr))",
                     gap: 12,
                   }}
                 >
@@ -581,7 +599,7 @@ const Portfolio = () => {
             style={{
               fontFamily: "'Zen Maru Gothic', sans-serif",
               fontWeight: 700,
-              fontSize: 18,
+              fontSize: isMobile ? 14 : 18,
               color: "#5B8C7E",
               cursor: "pointer",
             }}
@@ -591,38 +609,102 @@ const Portfolio = () => {
           </span>
 
           {/* Desktop Nav */}
+          {!isMobile && (
+            <div
+              style={{
+                display: "flex",
+                gap: 6,
+              }}
+            >
+              {navItems.slice(1).map((item) => (
+                <button
+                  key={item.id + item.label}
+                  onClick={() => scrollTo(item.id)}
+                  style={{
+                    background:
+                      activeSection === item.id
+                        ? "rgba(91, 140, 126, 0.1)"
+                        : "transparent",
+                    border: "none",
+                    padding: "6px 12px",
+                    borderRadius: 20,
+                    fontSize: 12.5,
+                    fontWeight: activeSection === item.id ? 600 : 400,
+                    color:
+                      activeSection === item.id ? "#5B8C7E" : "#888",
+                    cursor: "pointer",
+                    transition: "all 0.3s",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Mobile hamburger button */}
+          {isMobile && (
+            <button
+              onClick={() => setMenuOpen(!menuOpen)}
+              style={{
+                background: "none",
+                border: "none",
+                fontSize: 24,
+                color: "#5B8C7E",
+                cursor: "pointer",
+                padding: "4px 8px",
+                lineHeight: 1,
+              }}
+              aria-label="メニュー"
+            >
+              {menuOpen ? "✕" : "☰"}
+            </button>
+          )}
+        </div>
+
+        {/* Mobile menu overlay */}
+        {isMobile && menuOpen && (
           <div
             style={{
+              position: "fixed",
+              top: NAV_HEIGHT,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: "rgba(250, 250, 247, 0.98)",
+              backdropFilter: "blur(12px)",
+              zIndex: 99,
               display: "flex",
-              gap: 6,
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 8,
             }}
           >
             {navItems.slice(1).map((item) => (
               <button
-                key={item.id}
+                key={item.id + item.label}
                 onClick={() => scrollTo(item.id)}
                 style={{
-                  background:
-                    activeSection === item.id
-                      ? "rgba(91, 140, 126, 0.1)"
-                      : "transparent",
+                  background: activeSection === item.id ? "rgba(91, 140, 126, 0.1)" : "transparent",
                   border: "none",
-                  padding: "6px 12px",
-                  borderRadius: 20,
-                  fontSize: 12.5,
+                  padding: "14px 32px",
+                  borderRadius: 12,
+                  fontSize: 16,
                   fontWeight: activeSection === item.id ? 600 : 400,
-                  color:
-                    activeSection === item.id ? "#5B8C7E" : "#888",
+                  color: activeSection === item.id ? "#5B8C7E" : "#666",
                   cursor: "pointer",
-                  transition: "all 0.3s",
-                  whiteSpace: "nowrap",
+                  width: "80%",
+                  maxWidth: 300,
+                  textAlign: "center",
                 }}
               >
                 {item.label}
               </button>
             ))}
           </div>
-        </div>
+        )}
       </nav>
 
       {/* Hero + About combined */}
@@ -668,18 +750,19 @@ const Portfolio = () => {
           style={{
             display: "flex",
             alignItems: "center",
-            gap: 60,
-            padding: "0 40px",
+            gap: isMobile ? 24 : 60,
+            padding: isMobile ? "0 16px" : "0 40px",
             position: "relative",
             zIndex: 1,
             maxWidth: 1100,
             width: "100%",
             flexWrap: "wrap",
+            flexDirection: isMobile ? "column" : "row",
             justifyContent: "center",
           }}
         >
           {/* Left: Hero message */}
-          <div style={{ textAlign: "center", flex: "1 1 400px", maxWidth: 520 }}>
+          <div style={{ textAlign: "center", flex: isMobile ? "1 1 auto" : "1 1 400px", maxWidth: 520 }}>
             {/* Avatar */}
             <div
               style={{
@@ -751,11 +834,11 @@ const Portfolio = () => {
           {/* Right: About */}
           <div
             style={{
-              flex: "1 1 360px",
-              maxWidth: 440,
+              flex: isMobile ? "1 1 auto" : "1 1 360px",
+              maxWidth: isMobile ? "100%" : 440,
               background: "white",
               borderRadius: 20,
-              padding: "32px 28px",
+              padding: isMobile ? "24px 20px" : "32px 28px",
               boxShadow: "0 4px 24px rgba(0,0,0,0.04)",
               lineHeight: 1.9,
               fontSize: 13.5,
@@ -805,7 +888,7 @@ const Portfolio = () => {
         id="works"
         ref={(el) => (sectionRefs.current.works = el)}
         style={{
-          padding: "100px 24px",
+          padding: isMobile ? "60px 16px" : "100px 24px",
           maxWidth: 1000,
           margin: "0 auto",
         }}
@@ -825,7 +908,7 @@ const Portfolio = () => {
           <h2
             style={{
               fontFamily: "'Zen Maru Gothic', sans-serif",
-              fontSize: 26,
+              fontSize: isMobile ? 20 : 26,
               fontWeight: 700,
               marginBottom: 12,
               color: "#2D2D2D",
@@ -858,7 +941,7 @@ const Portfolio = () => {
                   border: "2px solid transparent",
                 }}
               >
-                <div style={{ padding: "32px 36px" }}>
+                <div style={{ padding: isMobile ? "24px 20px" : "32px 36px" }}>
                   <div
                     style={{
                       display: "flex",
@@ -870,7 +953,7 @@ const Portfolio = () => {
                     <span
                       style={{
                         fontFamily: "'Zen Maru Gothic', sans-serif",
-                        fontSize: 36,
+                        fontSize: isMobile ? 28 : 36,
                         fontWeight: 700,
                         color: work.color,
                         opacity: 0.4,
@@ -897,7 +980,7 @@ const Portfolio = () => {
                       <h3
                         style={{
                           fontFamily: "'Zen Maru Gothic', sans-serif",
-                          fontSize: 19,
+                          fontSize: isMobile ? 16 : 19,
                           fontWeight: 700,
                           lineHeight: 1.6,
                           color: "#2D2D2D",
@@ -961,7 +1044,7 @@ const Portfolio = () => {
         id="services"
         ref={(el) => (sectionRefs.current.services = el)}
         style={{
-          padding: "100px 24px",
+          padding: isMobile ? "60px 16px" : "100px 24px",
           maxWidth: 1000,
           margin: "0 auto",
         }}
@@ -981,7 +1064,7 @@ const Portfolio = () => {
           <h2
             style={{
               fontFamily: "'Zen Maru Gothic', sans-serif",
-              fontSize: 26,
+              fontSize: isMobile ? 20 : 26,
               fontWeight: 700,
               marginBottom: 40,
               color: "#2D2D2D",
@@ -997,7 +1080,7 @@ const Portfolio = () => {
             style={{
               background: "white",
               borderRadius: 20,
-              padding: "36px 36px",
+              padding: isMobile ? "24px 20px" : "36px 36px",
               boxShadow: "0 4px 24px rgba(0,0,0,0.04)",
               marginBottom: 24,
             }}
@@ -1057,7 +1140,7 @@ const Portfolio = () => {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(440px, 1fr))",
+            gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fit, minmax(440px, 1fr))",
             gap: 20,
             marginBottom: 24,
           }}
@@ -1107,7 +1190,7 @@ const Portfolio = () => {
                 style={{
                   background: "white",
                   borderRadius: 16,
-                  padding: "28px 28px",
+                  padding: isMobile ? "20px 18px" : "28px 28px",
                   boxShadow: "0 2px 16px rgba(0,0,0,0.04)",
                   borderTop: `3px solid ${card.color}`,
                   height: "100%",
@@ -1159,7 +1242,7 @@ const Portfolio = () => {
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "1fr 1fr",
+              gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
               gap: 20,
               marginBottom: 24,
             }}
@@ -1202,7 +1285,7 @@ const Portfolio = () => {
             style={{
               background: "rgba(126, 186, 181, 0.08)",
               borderRadius: 16,
-              padding: "28px 32px",
+              padding: isMobile ? "24px 20px" : "28px 32px",
               textAlign: "center",
             }}
           >
@@ -1237,7 +1320,7 @@ const Portfolio = () => {
         id="tools"
         ref={(el) => (sectionRefs.current.tools = el)}
         style={{
-          padding: "100px 24px",
+          padding: isMobile ? "60px 16px" : "100px 24px",
           maxWidth: 1000,
           margin: "0 auto",
         }}
@@ -1257,7 +1340,7 @@ const Portfolio = () => {
           <h2
             style={{
               fontFamily: "'Zen Maru Gothic', sans-serif",
-              fontSize: 26,
+              fontSize: isMobile ? 20 : 26,
               fontWeight: 700,
               marginBottom: 40,
               color: "#2D2D2D",
@@ -1290,7 +1373,7 @@ const Portfolio = () => {
                 style={{
                   background: "white",
                   borderRadius: 16,
-                  padding: "28px 32px",
+                  padding: isMobile ? "20px 20px" : "28px 32px",
                   boxShadow: "0 4px 24px rgba(0,0,0,0.04)",
                 }}
               >
@@ -1342,7 +1425,7 @@ const Portfolio = () => {
         id="flow"
         ref={(el) => (sectionRefs.current.flow = el)}
         style={{
-          padding: "100px 24px",
+          padding: isMobile ? "60px 16px" : "100px 24px",
           maxWidth: 1000,
           margin: "0 auto",
         }}
@@ -1362,7 +1445,7 @@ const Portfolio = () => {
           <h2
             style={{
               fontFamily: "'Zen Maru Gothic', sans-serif",
-              fontSize: 26,
+              fontSize: isMobile ? 20 : 26,
               fontWeight: 700,
               marginBottom: 40,
               color: "#2D2D2D",
@@ -1377,8 +1460,8 @@ const Portfolio = () => {
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-              gap: 14,
+              gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(auto-fit, minmax(200px, 1fr))",
+              gap: isMobile ? 10 : 14,
               marginBottom: 40,
             }}
           >
@@ -1393,7 +1476,7 @@ const Portfolio = () => {
                 style={{
                   background: "white",
                   borderRadius: 14,
-                  padding: "20px 20px",
+                  padding: isMobile ? "16px 10px" : "20px 20px",
                   boxShadow: "0 2px 12px rgba(0,0,0,0.03)",
                   textAlign: "center",
                 }}
@@ -1402,11 +1485,12 @@ const Portfolio = () => {
                 <p style={{ fontSize: 11, color: "#999", marginBottom: 6, fontWeight: 500 }}>{item.label}</p>
                 <p
                   style={{
-                    fontSize: 14,
+                    fontSize: isMobile ? 12 : 14,
                     fontWeight: 700,
                     color: "#5B8C7E",
                     fontFamily: "'Zen Maru Gothic', sans-serif",
                     marginBottom: 4,
+                    wordBreak: "break-all",
                   }}
                 >
                   {item.value}
@@ -1509,7 +1593,7 @@ const Portfolio = () => {
         id="timeline"
         ref={(el) => (sectionRefs.current.timeline = el)}
         style={{
-          padding: "100px 24px",
+          padding: isMobile ? "60px 16px" : "100px 24px",
           maxWidth: 1000,
           margin: "0 auto",
         }}
@@ -1529,7 +1613,7 @@ const Portfolio = () => {
           <h2
             style={{
               fontFamily: "'Zen Maru Gothic', sans-serif",
-              fontSize: 26,
+              fontSize: isMobile ? 20 : 26,
               fontWeight: 700,
               marginBottom: 40,
               color: "#2D2D2D",
@@ -1622,7 +1706,7 @@ const Portfolio = () => {
         id="vision"
         ref={(el) => (sectionRefs.current.vision = el)}
         style={{
-          padding: "100px 24px",
+          padding: isMobile ? "60px 16px" : "100px 24px",
           maxWidth: 1000,
           margin: "0 auto",
         }}
@@ -1642,7 +1726,7 @@ const Portfolio = () => {
           <h2
             style={{
               fontFamily: "'Zen Maru Gothic', sans-serif",
-              fontSize: 26,
+              fontSize: isMobile ? 20 : 26,
               fontWeight: 700,
               marginBottom: 40,
               color: "#2D2D2D",
@@ -1657,10 +1741,10 @@ const Portfolio = () => {
             style={{
               background: "white",
               borderRadius: 20,
-              padding: "40px 36px",
+              padding: isMobile ? "28px 20px" : "40px 36px",
               boxShadow: "0 4px 24px rgba(0,0,0,0.04)",
               lineHeight: 2,
-              fontSize: 15,
+              fontSize: isMobile ? 14 : 15,
               color: "#555",
             }}
           >
@@ -1691,7 +1775,7 @@ const Portfolio = () => {
         id="contact"
         ref={(el) => (sectionRefs.current.contact = el)}
         style={{
-          padding: "100px 24px 60px",
+          padding: isMobile ? "60px 16px 40px" : "100px 24px 60px",
           maxWidth: 1000,
           margin: "0 auto",
         }}
@@ -1702,7 +1786,7 @@ const Portfolio = () => {
               background:
                 "linear-gradient(135deg, #5B8C7E 0%, #7EBAB5 50%, #9BB5D6 100%)",
               borderRadius: 24,
-              padding: "56px 40px",
+              padding: isMobile ? "40px 20px" : "56px 40px",
               color: "white",
               textAlign: "center",
             }}
@@ -1753,7 +1837,7 @@ const Portfolio = () => {
               style={{
                 background: "rgba(255,255,255,0.15)",
                 borderRadius: 16,
-                padding: "24px 32px",
+                padding: isMobile ? "20px 16px" : "24px 32px",
                 maxWidth: 400,
                 margin: "0 auto 20px",
                 backdropFilter: "blur(8px)",

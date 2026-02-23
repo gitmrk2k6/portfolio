@@ -1,18 +1,28 @@
+import { useState, useEffect } from "react";
+
 const ChatbotDemo = ({ title, src }) => {
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   return (
     <div
       style={{
         marginBottom: 36,
         background: "white",
         borderRadius: 16,
-        padding: "32px 32px",
+        padding: isMobile ? "20px 16px" : "32px 32px",
         boxShadow: "0 2px 16px rgba(0,0,0,0.04)",
       }}
     >
       <h2
         style={{
           fontFamily: "'Zen Maru Gothic', sans-serif",
-          fontSize: 17,
+          fontSize: isMobile ? 15 : 17,
           fontWeight: 700,
           color: "#5B8C7E",
           marginBottom: 18,
@@ -24,8 +34,8 @@ const ChatbotDemo = ({ title, src }) => {
       </h2>
       <div
         style={{
-          minHeight: 700,
-          height: "80vh",
+          minHeight: isMobile ? 400 : 700,
+          height: isMobile ? "60vh" : "80vh",
           borderRadius: 12,
           overflow: "hidden",
           border: "1px solid #E8E8E0",
