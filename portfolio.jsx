@@ -663,47 +663,59 @@ const Portfolio = () => {
           )}
         </div>
 
-        {/* Mobile menu overlay */}
+        {/* Mobile dropdown menu */}
         {isMobile && menuOpen && (
-          <div
-            style={{
-              position: "fixed",
-              top: NAV_HEIGHT,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              background: "rgba(250, 250, 247, 0.98)",
-              backdropFilter: "blur(12px)",
-              zIndex: 99,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 8,
-            }}
-          >
-            {navItems.slice(1).map((item) => (
-              <button
-                key={item.id + item.label}
-                onClick={() => scrollTo(item.id)}
-                style={{
-                  background: activeSection === item.id ? "rgba(91, 140, 126, 0.1)" : "transparent",
-                  border: "none",
-                  padding: "14px 32px",
-                  borderRadius: 12,
-                  fontSize: 16,
-                  fontWeight: activeSection === item.id ? 600 : 400,
-                  color: activeSection === item.id ? "#5B8C7E" : "#666",
-                  cursor: "pointer",
-                  width: "80%",
-                  maxWidth: 300,
-                  textAlign: "center",
-                }}
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
+          <>
+            {/* Backdrop */}
+            <div
+              onClick={() => setMenuOpen(false)}
+              style={{
+                position: "fixed",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: "rgba(0,0,0,0.15)",
+                zIndex: 98,
+              }}
+            />
+            {/* Dropdown */}
+            <div
+              style={{
+                position: "absolute",
+                top: NAV_HEIGHT - 4,
+                right: 16,
+                background: "white",
+                borderRadius: 14,
+                boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
+                zIndex: 99,
+                padding: "10px 6px",
+                minWidth: 180,
+              }}
+            >
+              {navItems.slice(1).map((item) => (
+                <button
+                  key={item.id + item.label}
+                  onClick={() => scrollTo(item.id)}
+                  style={{
+                    display: "block",
+                    width: "100%",
+                    background: activeSection === item.id ? "rgba(91, 140, 126, 0.1)" : "transparent",
+                    border: "none",
+                    padding: "11px 18px",
+                    borderRadius: 8,
+                    fontSize: 14,
+                    fontWeight: activeSection === item.id ? 600 : 400,
+                    color: activeSection === item.id ? "#5B8C7E" : "#555",
+                    cursor: "pointer",
+                    textAlign: "left",
+                  }}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          </>
         )}
       </nav>
 
@@ -718,6 +730,7 @@ const Portfolio = () => {
           justifyContent: "center",
           position: "relative",
           overflow: "hidden",
+          paddingTop: isMobile ? NAV_HEIGHT + 20 : 0,
         }}
       >
         {/* Background decoration */}
