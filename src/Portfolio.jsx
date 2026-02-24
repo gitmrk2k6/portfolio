@@ -789,7 +789,7 @@ const Portfolio = () => {
               }}
             >
               <img
-                src={`${import.meta.env.BASE_URL}icon.png`}
+                src={`${import.meta.env.BASE_URL}images/icon.png`}
                 alt="小西啓介"
                 style={{
                   width: "100%",
