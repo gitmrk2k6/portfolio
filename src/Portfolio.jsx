@@ -131,7 +131,7 @@ const Portfolio = () => {
     setMenuOpen(false);
     isScrollingRef.current = true;
 
-    const el = sectionRefs.current[id];
+    const el = sectionRefs.current[id] || document.getElementById(id);
     if (el) {
       const top = el.getBoundingClientRect().top + window.pageYOffset - NAV_HEIGHT;
       window.scrollTo({ top, behavior: "smooth" });
@@ -152,7 +152,8 @@ const Portfolio = () => {
     { id: "flow", label: "ご依頼について" },
     { id: "timeline", label: "経歴" },
     { id: "vision", label: "ビジョン" },
-    { id: "contact", label: "連絡先" },
+    { id: "closing", label: "最後に" },
+    { id: "contact-info", label: "連絡先" },
   ];
 
   const works = [
@@ -870,7 +871,9 @@ const Portfolio = () => {
               ABOUT
             </p>
             <p style={{ marginBottom: 14 }}>
-              ご覧いただきありがとうございます。小西啓介（こにしけいすけ）と申します。
+              ご覧いただきありがとうございます。
+              <br />
+              小西啓介（こにしけいすけ）と申します。
             </p>
             <p style={{ marginBottom: 14 }}>
               元中学校の理科教員で、現在はインフラエンジニアとして働きながら、AIチャットボットの開発を行っています。
@@ -1481,7 +1484,7 @@ const Portfolio = () => {
             {[
               { icon: "¥", label: "料金目安", value: "ご相談ください", sub: "ご予算に応じて柔軟に対応" },
               { icon: "⏱", label: "納期目安", value: "2週間〜1ヶ月", sub: "要件の規模により変動" },
-              { icon: "✉", label: "連絡先", value: "konishi.ai.dev@gmail.com", sub: "メールにてお問い合わせ" },
+              { icon: "📝", label: "連絡先", formUrl: "https://script.google.com/macros/s/AKfycbzxeJq0vW4j5olMsRpZZGtoBjnlNJlZfdoYv87X-ukF4PkINxUFL6YGDm_2s6mSRj-_/exec", sub: "もしくは", email: "konishi.ai.dev@gmail.com" },
               { icon: "⏰", label: "対応時間", value: "平日19時以降 / 土日", sub: "返信：24時間以内" },
             ].map((item, i) => (
               <div
@@ -1496,19 +1499,46 @@ const Portfolio = () => {
               >
                 <span style={{ fontSize: 22, display: "block", marginBottom: 8 }}>{item.icon}</span>
                 <p style={{ fontSize: 11, color: "#999", marginBottom: 6, fontWeight: 500 }}>{item.label}</p>
-                <p
-                  style={{
-                    fontSize: isMobile ? 12 : 14,
-                    fontWeight: 700,
-                    color: "#5B8C7E",
-                    fontFamily: "'Zen Maru Gothic', sans-serif",
-                    marginBottom: 4,
-                    wordBreak: "break-all",
-                  }}
-                >
-                  {item.value}
-                </p>
-                <p style={{ fontSize: 11, color: "#BBB" }}>{item.sub}</p>
+                {item.formUrl ? (
+                  <>
+                    <a
+                      href={item.formUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        display: "inline-block",
+                        fontSize: isMobile ? 12 : 14,
+                        fontWeight: 700,
+                        color: "#5B8C7E",
+                        fontFamily: "'Zen Maru Gothic', sans-serif",
+                        marginBottom: 4,
+                        textDecoration: "underline",
+                      }}
+                    >
+                      お問い合わせフォーム
+                    </a>
+                    <p style={{ fontSize: 11, color: "#BBB" }}>{item.sub}</p>
+                    <p style={{ fontSize: 11, color: "#5B8C7E", fontWeight: 600, marginTop: 4, wordBreak: "break-all" }}>
+                      ✉ {item.email}
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p
+                      style={{
+                        fontSize: isMobile ? 12 : 14,
+                        fontWeight: 700,
+                        color: "#5B8C7E",
+                        fontFamily: "'Zen Maru Gothic', sans-serif",
+                        marginBottom: 4,
+                        wordBreak: "break-all",
+                      }}
+                    >
+                      {item.value}
+                    </p>
+                    <p style={{ fontSize: 11, color: "#BBB" }}>{item.sub}</p>
+                  </>
+                )}
               </div>
             ))}
           </div>
@@ -1805,6 +1835,7 @@ const Portfolio = () => {
             }}
           >
             <h2
+              id="closing"
               style={{
                 fontFamily: "'Zen Maru Gothic', sans-serif",
                 fontSize: 24,
@@ -1847,6 +1878,7 @@ const Portfolio = () => {
 
             {/* Contact Info */}
             <div
+              id="contact-info"
               style={{
                 background: "rgba(255,255,255,0.15)",
                 borderRadius: 16,
@@ -1866,13 +1898,38 @@ const Portfolio = () => {
               >
                 CONTACT
               </p>
+              <p style={{ fontSize: 14, marginTop: 4 }}>
+                📝{" "}
+                <a
+                  href="https://script.google.com/macros/s/AKfycbzxeJq0vW4j5olMsRpZZGtoBjnlNJlZfdoYv87X-ukF4PkINxUFL6YGDm_2s6mSRj-_/exec"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    color: "white",
+                    textDecoration: "underline",
+                    fontWeight: 500,
+                  }}
+                >
+                  お問い合わせフォームはこちら
+                </a>
+              </p>
+              <p
+                style={{
+                  fontSize: 13,
+                  marginTop: 10,
+                  opacity: 0.7,
+                }}
+              >
+                もしくは
+              </p>
               <p
                 style={{
                   fontSize: 15,
                   fontWeight: 500,
+                  marginTop: 10,
                 }}
               >
-                konishi.ai.dev@gmail.com
+                ✉ konishi.ai.dev@gmail.com
               </p>
               <p
                 style={{
@@ -1895,7 +1952,7 @@ const Portfolio = () => {
             >
               「こんなこと相談していいのかな？」くらいの内容でも大歓迎です。
               <br />
-              お気軽にご連絡ください。
+              お問い合わせフォームまたはメールからお気軽にご連絡ください。
             </p>
           </div>
         </FadeIn>
