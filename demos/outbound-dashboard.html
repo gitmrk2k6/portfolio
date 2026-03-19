@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI自動架電 ダッシュボード（デモ）</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Sans', sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 24px 16px; }
+  .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+  .header h1 { font-size: 18px; font-weight: 700; color: #f8fafc; }
+  .demo-badge { background: #6C5CE7; color: #fff; font-size: 10px; padding: 3px 10px; border-radius: 10px; font-weight: 600; margin-left: 8px; }
+  .status-badge { display: inline-block; padding: 5px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+  .status-idle { background: #334155; color: #94a3b8; }
+  .status-running { background: #064e3b; color: #34d399; animation: pulse 2s infinite; }
+  .status-paused { background: #78350f; color: #fbbf24; }
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.7; } }
+  .section-title { font-size: 12px; font-weight: 600; color: #94a3b8; margin-bottom: 10px; letter-spacing: 0.04em; }
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 20px; }
+  .kpi { background: #1e293b; border-radius: 10px; padding: 14px; }
+  .kpi-label { font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 3px; }
+  .kpi-value { font-size: 24px; font-weight: 700; color: #f1f5f9; }
+  .kpi-unit { font-size: 12px; font-weight: 400; color: #64748b; margin-left: 2px; }
+  .live-section { background: #1e293b; border-radius: 10px; padding: 16px; margin-bottom: 20px; }
+  .live-header { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
+  .live-dot { width: 7px; height: 7px; border-radius: 50%; background: #ef4444; }
+  .live-dot.active { background: #22c55e; animation: pulse 1.5s infinite; }
+  .live-current { font-size: 14px; color: #f1f5f9; margin-bottom: 10px; padding: 10px; background: #0f172a; border-radius: 6px; min-height: 36px; display: flex; align-items: center; }
+  .log-feed { max-height: 160px; overflow-y: auto; font-family: 'SF Mono','Fira Code',monospace; font-size: 11px; line-height: 1.6; color: #94a3b8; }
+  .log-feed::-webkit-scrollbar { width: 3px; }
+  .log-feed::-webkit-scrollbar-thumb { background: #334155; border-radius: 2px; }
+  .log-entry { padding: 1px 0; }
+  .log-time { color: #475569; margin-right: 6px; }
+  .controls { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+  button { padding: 8px 18px; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+  button:hover { opacity: 0.85; transform: translateY(-1px); }
+  button:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+  .btn-start { background: #059669; color: #fff; }
+  .btn-pause { background: #d97706; color: #fff; }
+  .btn-resume { background: #2563eb; color: #fff; }
+  .btn-stop { background: #dc2626; color: #fff; }
+  .tabs { display: flex; gap: 0; margin-bottom: 0; border-bottom: 2px solid #1e293b; }
+  .tab { padding: 8px 16px; font-size: 12px; font-weight: 600; color: #64748b; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.2s; }
+  .tab:hover { color: #94a3b8; }
+  .tab.active { color: #e2e8f0; border-bottom-color: #3b82f6; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+  .table-wrap { overflow-x: auto; background: #1e293b; border-radius: 0 0 10px 10px; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th { text-align: left; padding: 10px 12px; color: #64748b; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid #334155; white-space: nowrap; }
+  td { padding: 8px 12px; border-bottom: 1px solid #1e293b; color: #cbd5e1; vertical-align: top; }
+  tr:hover td { background: #162032; }
+  .result-badge { display: inline-block; padding: 2px 8px; border-radius: 8px; font-size: 10px; font-weight: 600; }
+  .result-ok { background: #064e3b; color: #34d399; }
+  .result-absent { background: #78350f; color: #fbbf24; }
+  .interest-stars { color: #fbbf24; letter-spacing: 1px; font-size: 11px; }
+  .status-done { color: #34d399; }
+  .status-empty { color: #64748b; }
+  .summary-cell { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .summary-cell:hover { white-space: normal; }
+  .footer { font-size: 10px; color: #475569; margin-top: 16px; text-align: right; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>AI自動架電 ダッシュボード<span class="demo-badge">DEMO</span></h1>
+    <span id="badge" class="status-badge status-idle">停止中</span>
+  </div>
+
+  <div class="section-title">KPI</div>
+  <div class="kpi-grid">
+    <div class="kpi"><div class="kpi-label">総架電数</div><div class="kpi-value" id="kpiTotal">0<span class="kpi-unit">件</span></div></div>
+    <div class="kpi"><div class="kpi-label">通話成功率</div><div class="kpi-value" id="kpiRate">0<span class="kpi-unit">%</span></div></div>
+    <div class="kpi"><div class="kpi-label">平均興味度</div><div class="kpi-value" id="kpiInterest">0<span class="kpi-unit">/ 5</span></div></div>
+    <div class="kpi"><div class="kpi-label">メール送信数</div><div class="kpi-value" id="kpiEmail">0<span class="kpi-unit">通</span></div></div>
+    <div class="kpi"><div class="kpi-label">残りリード</div><div class="kpi-value" id="kpiRemaining">5<span class="kpi-unit">件</span></div></div>
+    <div class="kpi"><div class="kpi-label">エラー</div><div class="kpi-value" id="kpiErrors">0<span class="kpi-unit">件</span></div></div>
+  </div>
+
+  <div class="live-section">
+    <div class="live-header">
+      <div class="live-dot" id="liveDot"></div>
+      <div class="section-title" style="margin-bottom:0">ライブアクティビティ</div>
+    </div>
+    <div class="live-current" id="liveCurrent">待機中 — 「開始」ボタンでデモを実行</div>
+    <div class="log-feed" id="logFeed"></div>
+  </div>
+
+  <div class="controls">
+    <button class="btn-start" id="btnStart" onclick="startDemo()">開始</button>
+    <button class="btn-pause" id="btnPause" onclick="pauseDemo()" disabled>一時停止</button>
+    <button class="btn-resume" id="btnResume" onclick="resumeDemo()" disabled>再開</button>
+    <button class="btn-stop" id="btnStop" onclick="stopDemo()" disabled>停止</button>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('leads')">架電リスト管理</div>
+    <div class="tab" onclick="switchTab('history')">架電履歴一覧</div>
+  </div>
+
+  <div id="tab-leads" class="tab-content active">
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>会社名</th><th>担当者名</th><th>電話番号</th><th>メール</th><th>ステータス</th></tr></thead>
+        <tbody id="leadsBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="tab-history" class="tab-content">
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>日時</th><th>会社名</th><th>担当者名</th><th>結果</th><th>興味度</th><th>要約</th></tr></thead>
+        <tbody id="historyBody"><tr><td colspan="6" style="text-align:center;color:#475569">架電履歴はまだありません</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="footer">これはデモ画面です。実際の架電は行われません。</div>
+</div>
+
+<script>
+const LEADS = [
+  { company: '株式会社テクノフューチャー', name: '佐藤一郎', phone: '03-1234-5678', email: 'sato@technofuture.co.jp', status: '', interest: 5, summary: 'AI営業ツールのデモに強い関心。来週中にオンラインミーティングを希望。' },
+  { company: '山田商事株式会社', name: '山田花子', phone: '06-2345-6789', email: 'yamada@yamada-shoji.co.jp', status: '', interest: 3, summary: '現在は既存のCRMを使用中。情報として持っておきたいとのこと。' },
+  { company: '株式会社グローバルネット', name: '鈴木健太', phone: '03-3456-7890', email: 'suzuki@globalnet.co.jp', status: '', interest: 0, summary: '' },
+  { company: 'ライズコンサルティング', name: '高橋美咲', phone: '052-4567-8901', email: 'takahashi@rise-c.co.jp', status: '', interest: 4, summary: '営業チームの架電効率に課題あり。具体的な費用感を聞きたいとのこと。' },
+  { company: '株式会社サンライト', name: '中村大輔', phone: '03-5678-9012', email: 'nakamura@sunlight.co.jp', status: '', interest: 1, summary: '現在は営業代行を利用中。切り替えの予定なし。' },
+];
+
+const CALL_RESULTS = ['応答', '応答', '不在(3回)', '応答', '応答'];
+const INTEREST_MAP = [5, 3, 0, 4, 1];
+
+let state = 'idle';
+let currentIdx = 0;
+let processed = 0;
+let success = 0;
+let emails = 0;
+let errors = 0;
+let totalInterest = 0;
+let logs = [];
+let timer = null;
+let stepPhase = 0;
+let paused = false;
+
+function el(id) { return document.getElementById(id); }
+function nowTime() { const d = new Date(); return d.getHours()+':'+String(d.getMinutes()).padStart(2,'0')+':'+String(d.getSeconds()).padStart(2,'0'); }
+
+function addLog(msg) {
+  logs.push({ time: nowTime(), message: msg });
+  if (logs.length > 50) logs.shift();
+  const feed = el('logFeed');
+  feed.innerHTML = logs.map(l => '<div class="log-entry"><span class="log-time">'+l.time+'</span>'+l.message+'</div>').join('');
+  feed.scrollTop = feed.scrollHeight;
+}
+
+function updateKPI() {
+  const remaining = LEADS.length - processed;
+  const rate = processed > 0 ? Math.round((success / processed) * 100) : 0;
+  const avgInt = success > 0 ? Math.round((totalInterest / success) * 10) / 10 : 0;
+  el('kpiTotal').innerHTML = processed + '<span class="kpi-unit">件</span>';
+  el('kpiRate').innerHTML = rate + '<span class="kpi-unit">%</span>';
+  el('kpiInterest').innerHTML = avgInt + '<span class="kpi-unit">/ 5</span>';
+  el('kpiEmail').innerHTML = emails + '<span class="kpi-unit">通</span>';
+  el('kpiRemaining').innerHTML = remaining + '<span class="kpi-unit">件</span>';
+  el('kpiErrors').innerHTML = errors + '<span class="kpi-unit">件</span>';
+}
+
+function renderLeads() {
+  el('leadsBody').innerHTML = LEADS.map(l => {
+    const s = l.status || '未対応';
+    const sc = l.status.includes('完了') ? 'status-done' : 'status-empty';
+    return '<tr><td>'+l.company+'</td><td>'+l.name+'</td><td>'+l.phone+'</td><td>'+l.email+'</td><td><span class="'+sc+'">'+s+'</span></td></tr>';
+  }).join('');
+}
+
+function renderHistory() {
+  const rows = LEADS.filter(l => l.status !== '').map(l => {
+    const isOk = l.status === '完了';
+    const rc = isOk ? 'result-ok' : 'result-absent';
+    const result = isOk ? '応答' : '不在(3回)';
+    const stars = l.interest > 0 ? '\u2605'.repeat(l.interest) + '\u2606'.repeat(5-l.interest) : '--';
+    return '<tr><td style="white-space:nowrap">'+new Date().toLocaleDateString('ja-JP')+'</td><td>'+l.company+'</td><td>'+l.name+'</td><td><span class="result-badge '+rc+'">'+result+'</span></td><td><span class="interest-stars">'+stars+'</span></td><td class="summary-cell">'+(l.summary||'--')+'</td></tr>';
+  }).reverse();
+  el('historyBody').innerHTML = rows.length ? rows.join('') : '<tr><td colspan="6" style="text-align:center;color:#475569">架電履歴はまだありません</td></tr>';
+}
+
+function setButtons() {
+  el('btnStart').disabled = state === 'running' || state === 'paused';
+  el('btnPause').disabled = state !== 'running';
+  el('btnResume').disabled = state !== 'paused';
+  el('btnStop').disabled = state === 'idle';
+}
+
+function setState(s) {
+  state = s;
+  const labels = { idle: '停止中', running: '実行中', paused: '一時停止中' };
+  el('badge').textContent = labels[s] || s;
+  el('badge').className = 'status-badge status-' + s;
+  el('liveDot').className = 'live-dot' + (s === 'running' ? ' active' : '');
+  setButtons();
+}
+
+function processStep() {
+  if (state !== 'running') return;
+  if (currentIdx >= LEADS.length) {
+    addLog('完了 \u2014 処理: '+processed+'件, 成功: '+success+'件');
+    el('liveCurrent').textContent = '全リードの処理が完了しました';
+    setState('idle');
+    return;
+  }
+
+  const lead = LEADS[currentIdx];
+  const result = CALL_RESULTS[currentIdx];
+  const interest = INTEREST_MAP[currentIdx];
+
+  if (stepPhase === 0) {
+    el('liveCurrent').innerHTML = '\u{1F4DE} ' + lead.company + ' ' + lead.name + ' に架電中...';
+    addLog('\u67B6\u96FB\u958B\u59CB: ' + lead.company + ' ' + lead.name + ' (' + lead.phone + ')');
+    stepPhase = 1;
+    timer = setTimeout(processStep, 2000);
+  } else if (stepPhase === 1) {
+    if (result === '応答') {
+      addLog('\u5FDC\u7B54\u3042\u308A: \u8208\u5473\u5EA6 ' + interest + '/5');
+      el('liveCurrent').innerHTML = '\u{1F50D} ' + lead.company + ' \u306E\u901A\u8A71\u5185\u5BB9\u3092\u5206\u6790\u4E2D...';
+    } else {
+      addLog('\u4E0D\u5728/\u8A71\u4E2D \u2014 3\u56DE\u30EA\u30C8\u30E9\u30A4\u6E08\u307F');
+      el('liveCurrent').innerHTML = '\u274C ' + lead.company + ' \u4E0D\u5728(3\u56DE)';
+    }
+    stepPhase = 2;
+    timer = setTimeout(processStep, 1500);
+  } else if (stepPhase === 2) {
+    if (result === '応答') {
+      success++;
+      totalInterest += interest;
+      addLog('Google Sheets \u306B\u8A18\u9332\u5B8C\u4E86');
+      el('liveCurrent').innerHTML = '\u{1F4E7} ' + lead.company + ' \u306B\u30D5\u30A9\u30ED\u30FC\u30E1\u30FC\u30EB\u9001\u4FE1\u4E2D...';
+      lead.status = '完了';
+    } else {
+      errors++;
+      lead.status = '不在(3回)';
+    }
+    stepPhase = 3;
+    timer = setTimeout(processStep, 1200);
+  } else if (stepPhase === 3) {
+    if (result === '応答') {
+      emails++;
+      addLog('\u30D5\u30A9\u30ED\u30FC\u30A2\u30C3\u30D7\u30E1\u30FC\u30EB\u9001\u4FE1: ' + lead.email);
+    }
+    processed++;
+    updateKPI();
+    renderLeads();
+    renderHistory();
+    currentIdx++;
+    stepPhase = 0;
+    if (currentIdx < LEADS.length) {
+      el('liveCurrent').textContent = '\u6B21\u306E\u30EA\u30FC\u30C9\u3092\u6E96\u5099\u4E2D...';
+      timer = setTimeout(processStep, 1500);
+    } else {
+      timer = setTimeout(processStep, 500);
+    }
+  }
+}
+
+function startDemo() {
+  if (state === 'running') return;
+  currentIdx = 0; processed = 0; success = 0; emails = 0; errors = 0; totalInterest = 0; logs = [];
+  LEADS.forEach(l => { l.status = ''; });
+  setState('running');
+  addLog('\u30AA\u30FC\u30B1\u30B9\u30C8\u30EC\u30FC\u30BF\u30FC\u958B\u59CB');
+  addLog('\u672A\u5BFE\u5FDC\u30EA\u30FC\u30C9: ' + LEADS.length + '\u4EF6');
+  updateKPI();
+  renderLeads();
+  renderHistory();
+  stepPhase = 0;
+  timer = setTimeout(processStep, 1000);
+}
+
+function pauseDemo() {
+  if (state !== 'running') return;
+  setState('paused');
+  if (timer) clearTimeout(timer);
+  addLog('\u4E00\u6642\u505C\u6B62');
+  el('liveCurrent').textContent = '\u4E00\u6642\u505C\u6B62\u4E2D \u2014 \u300C\u518D\u958B\u300D\u30DC\u30BF\u30F3\u3067\u7D9A\u884C';
+}
+
+function resumeDemo() {
+  if (state !== 'paused') return;
+  setState('running');
+  addLog('\u518D\u958B');
+  timer = setTimeout(processStep, 500);
+}
+
+function stopDemo() {
+  if (state === 'idle') return;
+  if (timer) clearTimeout(timer);
+  addLog('\u505C\u6B62');
+  el('liveCurrent').textContent = '\u505C\u6B62\u3057\u307E\u3057\u305F';
+  setState('idle');
+}
+
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i === (name === 'leads' ? 0 : 1)));
+  el('tab-leads').classList.toggle('active', name === 'leads');
+  el('tab-history').classList.toggle('active', name === 'history');
+}
+
+renderLeads();
+updateKPI();
+</script>
+</body>
+</html>
